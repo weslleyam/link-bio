@@ -71,7 +71,17 @@ export const db = {
   },
 
   requestSubscription: async (user: User) => {
-    return await remoteCall('request_subscription', 'POST', user);
+    try {
+      const response = await fetch('/api/request-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      });
+      return await response.json();
+    } catch (e) {
+      console.error('Erro ao enviar solicitação de assinatura:', e);
+      return { success: false, error: e };
+    }
   },
 
   findUserByUsername: (username: string) => db.getUsers().find(u => u.username === username),
