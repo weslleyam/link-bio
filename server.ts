@@ -14,6 +14,18 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: "atendimento@cembrasites.com.br",
     pass: "uE$lley@55524"
+  },
+  tls: {
+    rejectUnauthorized: false
+  }
+});
+
+// Verificação de conexão SMTP
+transporter.verify(function (error, success) {
+  if (error) {
+    console.error("Erro SMTP:", error);
+  } else {
+    console.log("Servidor SMTP pronto para envio");
   }
 });
 
@@ -22,6 +34,23 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+
+  // Rota de teste de email
+  app.get("/test-email", async (req, res) => {
+    try {
+      await transporter.sendMail({
+        from: '"Cembra SaaS" <atendimento@cembrasites.com.br>',
+        to: "weslleyam@gmail.com",
+        subject: "Email de Teste - Cembra SaaS",
+        text: `Este é um email de teste enviado em ${new Date().toLocaleString()}`
+      });
+      console.log("Email de teste enviado com sucesso");
+      res.send("Email de teste enviado");
+    } catch (error) {
+      console.error("Erro ao enviar email de teste:", error);
+      res.status(500).send("Erro ao enviar email: " + error);
+    }
+  });
 
   // API routes go here
   app.get("/api/health", (req, res) => {
@@ -37,24 +66,18 @@ async function startServer() {
         from: '"Cembra SaaS" <atendimento@cembrasites.com.br>',
         to: "weslleyam@gmail.com",
         subject: "Nova solicitação de assinatura",
-        text: `Nova solicitação de assinatura recebida:
-
+        text: `
 Nome: ${name}
 Email: ${email}
-Plano escolhido: ${selectedPlan === 'semestral' ? 'Semestral' : 'Mensal'}
-Data da solicitação: ${date}`,
-        html: `
-          <h2>Nova solicitação de assinatura</h2>
-          <p><strong>Nome:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Plano escolhido:</strong> ${selectedPlan === 'semestral' ? 'Semestral' : 'Mensal'}</p>
-          <p><strong>Data da solicitação:</strong> ${date}</p>
+Plano: ${selectedPlan === 'semestral' ? 'Semestral' : 'Mensal'}
+Data: ${date}
         `
       });
+      console.log("Email enviado com sucesso");
       res.json({ success: true });
     } catch (error) {
       console.error("Erro ao enviar email:", error);
-      res.status(500).json({ success: false, error: "Falha ao enviar email" });
+      res.status(500).json({ success: false, error: "Falha ao enviar email: " + error });
     }
   });
 
