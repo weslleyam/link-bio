@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { User } from '@/types';
 import { db } from '@/services/db';
-import { ArrowUpRight, MousePointer2, Users, Link as LinkIcon, CreditCard, Check } from 'lucide-react';
+import { ArrowUpRight, MousePointer2, Users, Link as LinkIcon, CreditCard, Check, X } from 'lucide-react';
 
 interface Props {
   user: User;
@@ -11,6 +10,8 @@ interface Props {
 const DashboardHome: React.FC<Props> = ({ user }) => {
   const [isRequesting, setIsRequesting] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'mensal' | 'semestral'>('semestral');
 
   const page = db.getPageByUsername(user.username);
   const links = page ? db.getLinks(page.id) : [];
@@ -28,8 +29,9 @@ const DashboardHome: React.FC<Props> = ({ user }) => {
     if (!user) return;
     setIsRequesting(true);
     try {
-      await db.requestSubscription(user);
+      await db.requestSubscription({ ...user, selectedPlan } as any);
       setRequestSent(true);
+      setShowModal(false);
     } catch (e) {
       console.error(e);
     } finally {
@@ -97,16 +99,96 @@ const DashboardHome: React.FC<Props> = ({ user }) => {
               </p>
             </div>
             <button 
-              onClick={handleRequestSubscription}
-              disabled={isRequesting || requestSent}
+              onClick={() => setShowModal(true)}
+              disabled={requestSent}
               className={`px-10 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-2xl ${
                 requestSent 
                   ? 'bg-green-500 text-white cursor-default'
                   : 'bg-white text-indigo-600 hover:bg-indigo-50 active:scale-95'
               }`}
             >
-              {isRequesting ? 'Enviando...' : requestSent ? 'Solicitado!' : 'Assinar Plano'}
+              {requestSent ? 'Solicitado!' : 'Assinar Plano'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Assinatura */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 md:p-12">
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h2 className="text-3xl font-black text-gray-900 mb-2">Escolha seu Plano Pro</h2>
+                  <p className="text-gray-500 font-medium">Selecione a melhor opção para o seu negócio.</p>
+                </div>
+                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <X size={24} className="text-gray-400" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                {/* Plano Mensal */}
+                <div 
+                  onClick={() => setSelectedPlan('mensal')}
+                  className={`cursor-pointer p-8 rounded-[2rem] border-2 transition-all ${
+                    selectedPlan === 'mensal' 
+                      ? 'border-indigo-600 bg-indigo-50/30' 
+                      : 'border-gray-100 hover:border-gray-200'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-6">
+                    <h3 className="font-black text-gray-900 text-lg">Plano Mensal</h3>
+                    {selectedPlan === 'mensal' && <Check size={20} className="text-indigo-600" />}
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-black text-gray-900">R$ 5,99</span>
+                    <span className="text-gray-500 font-bold">/ mês</span>
+                  </div>
+                </div>
+
+                {/* Plano Semestral */}
+                <div 
+                  onClick={() => setSelectedPlan('semestral')}
+                  className={`cursor-pointer p-8 rounded-[2rem] border-2 transition-all relative ${
+                    selectedPlan === 'semestral' 
+                      ? 'border-indigo-600 bg-indigo-50/30 shadow-xl shadow-indigo-100' 
+                      : 'border-gray-100 hover:border-gray-200'
+                  }`}
+                >
+                  <div className="absolute -top-3 left-8">
+                    <span className="bg-indigo-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+                      MAIS VANTAJOSO
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-start mb-6">
+                    <h3 className="font-black text-gray-900 text-lg">Plano Semestral</h3>
+                    {selectedPlan === 'semestral' && <Check size={20} className="text-indigo-600" />}
+                  </div>
+                  <div className="flex items-baseline gap-1 mb-2">
+                    <span className="text-4xl font-black text-gray-900">R$ 33,70</span>
+                    <span className="text-gray-500 font-bold">(6 meses)</span>
+                  </div>
+                  <p className="text-indigo-600 text-xs font-black">
+                    Economize R$ 2,24 comparado ao plano mensal
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-6 text-center">
+                <p className="text-gray-500 text-sm font-bold">
+                  Escolha o plano ideal e receba o link de pagamento no seu email.
+                </p>
+                <button 
+                  onClick={handleRequestSubscription}
+                  disabled={isRequesting}
+                  className="w-full bg-indigo-600 text-white py-6 rounded-3xl font-black uppercase tracking-widest shadow-2xl shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isRequesting ? 'Processando...' : 'Confirmar e Receber Link'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
