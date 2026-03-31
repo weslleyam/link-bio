@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { db } from '../services/db';
-import { authService } from '../services/auth';
-import { User } from '../types';
+import { db } from '@/services/db';
+import { authService } from '@/services/auth';
+import { User } from '@/types';
 import { Mail, Wand2, ArrowLeft } from 'lucide-react';
 
 interface Props {

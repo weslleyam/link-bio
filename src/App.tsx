@@ -1,20 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import DashboardLayout from './components/DashboardLayout';
-import DashboardHome from './pages/DashboardHome';
-import LinksManager from './pages/LinksManager';
-import DesignCustomizer from './pages/DesignCustomizer';
-import CatalogManager from './pages/CatalogManager';
-import ProfileSettings from './pages/ProfileSettings';
-import Analytics from './pages/Analytics';
-import PublicBio from './pages/PublicBio';
-import PasswordSetup from './pages/PasswordSetup';
-import MagicLoginHandler from './pages/MagicLoginHandler';
-import { AuthState, User } from './types';
-import { db } from './services/db';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import DashboardLayout from '@/components/DashboardLayout';
+import DashboardHome from '@/pages/DashboardHome';
+import LinksManager from '@/pages/LinksManager';
+import DesignCustomizer from '@/pages/DesignCustomizer';
+import CatalogManager from '@/pages/CatalogManager';
+import ProfileSettings from '@/pages/ProfileSettings';
+import Analytics from '@/pages/Analytics';
+import PublicBio from '@/pages/PublicBio';
+import PasswordSetup from '@/pages/PasswordSetup';
+import MagicLoginHandler from '@/pages/MagicLoginHandler';
+import { AuthState, User } from '@/types';
+import { db } from '@/services/db';
 
 const App: React.FC = () => {
   const [auth, setAuth] = useState<AuthState>(() => {

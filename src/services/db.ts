@@ -1,5 +1,5 @@
 
-import { User, BioPage, BioLink, Product } from '../types';
+import { User, BioPage, BioLink, Product } from '@/types';
 
 const STORAGE_KEYS = {
   USERS: 'biolink_users',
