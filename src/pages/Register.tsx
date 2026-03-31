@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { User } from '@/types';
 import { db } from '@/services/db';
 import { authService } from '@/services/auth';
 import { ShieldEllipsis, Copy, Check, Lock } from 'lucide-react';
@@ -28,17 +29,22 @@ const Register: React.FC = () => {
     const password = generateRandomPassword();
     setGeneratedPassword(password);
 
-    const newUser = {
+    const now = new Date();
+    const trialExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const newUser: User = {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.name,
       email: formData.email,
       username: formData.username.toLowerCase().replace(/[^a-z0-9_]/g, ''),
       passwordHash: password, 
-      createdAt: new Date().toISOString(),
-      status: 'ACTIVE'
+      createdAt: now.toISOString(),
+      status: 'ACTIVE',
+      subscriptionStatus: 'trial',
+      trialExpiresAt: trialExpiresAt
     };
 
-    db.saveUser(newUser as any);
+    db.saveUser(newUser);
     
     // Simulação de envio de e-mail com credenciais
     authService.sendMagicEmail(

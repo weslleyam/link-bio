@@ -24,8 +24,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     
     if ($action === 'save_user') {
-        $stmt = $pdo->prepare("REPLACE INTO users (id, name, email, username, passwordHash, createdAt, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$data['id'], $data['name'], $data['email'], $data['username'], $data['passwordHash'], $data['createdAt'], $data['status']]);
+        $stmt = $pdo->prepare("REPLACE INTO users (id, name, email, username, passwordHash, createdAt, status, subscriptionStatus, trialExpiresAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$data['id'], $data['name'], $data['email'], $data['username'], $data['passwordHash'], $data['createdAt'], $data['status'], $data['subscriptionStatus'], $data['trialExpiresAt']]);
+        echo json_encode(['success' => true]);
+    }
+
+    if ($action === 'request_subscription') {
+        // Simulação de envio de e-mail para o ADMIN
+        // Em um servidor real, você usaria mail() ou uma biblioteca como PHPMailer
+        $to = 'admin@teste.com';
+        $subject = 'Solicitação de Renovação de Plano';
+        $message = "Cliente solicitou renovação de plano:\n\n" .
+                   "Nome: " . $data['name'] . "\n" .
+                   "Email: " . $data['email'] . "\n" .
+                   "ID: " . $data['id'];
+        
+        // Log para simulação
+        error_log("E-mail enviado para $to: $subject\n$message");
+        
         echo json_encode(['success' => true]);
     }
     

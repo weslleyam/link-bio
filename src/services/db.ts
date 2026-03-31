@@ -45,14 +45,16 @@ export const db = {
     const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const adminExists = users.find((u: any) => u.email === 'admin@teste.com');
     if (!adminExists) {
-      const adminUser = {
+      const adminUser: User = {
         id: 'admin-id',
         name: 'Administrador Teste',
         email: 'admin@teste.com',
         username: 'admin',
         passwordHash: 'admin',
         createdAt: new Date().toISOString(),
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        subscriptionStatus: 'ativo',
+        trialExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString() // 1 year for admin
       };
       const updatedUsers = [...users, adminUser];
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
@@ -66,6 +68,10 @@ export const db = {
     const users = db.getUsers().filter(u => u.id !== user.id);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([...users, user]));
     remoteCall('save_user', 'POST', user);
+  },
+
+  requestSubscription: async (user: User) => {
+    return await remoteCall('request_subscription', 'POST', user);
   },
 
   findUserByUsername: (username: string) => db.getUsers().find(u => u.username === username),

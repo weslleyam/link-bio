@@ -5,6 +5,10 @@ export interface User {
   email: string;
   username: string;
   createdAt: string;
+  subscriptionStatus: 'trial' | 'ativo' | 'expirado';
+  trialExpiresAt: string;
+  passwordHash?: string;
+  status?: string;
 }
 
 export interface Product {

@@ -2,11 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '@/services/db';
-import { BioPage, BioLink, Product } from '@/types';
+import { BioPage, BioLink, Product, User } from '@/types';
 import { AlertCircle, ArrowRight, ShoppingBag, MessageCircle, ArrowLeft } from 'lucide-react';
 
 const PublicBio: React.FC = () => {
   const { username } = useParams<{ username: string }>();
+  const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<BioPage | null>(null);
   const [links, setLinks] = useState<BioLink[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -15,8 +16,10 @@ const PublicBio: React.FC = () => {
 
   useEffect(() => {
     if (username) {
+      const u = db.findUserByUsername(username);
       const p = db.getPageByUsername(username);
-      if (p) {
+      if (u && p) {
+        setUser(u);
         setPage(p);
         setLinks(db.getLinks(p.id).filter(l => l.isActive));
         setProducts(db.getProducts(p.id).filter(prod => prod.isActive));
@@ -38,13 +41,21 @@ const PublicBio: React.FC = () => {
     return `https://wa.me/${cleanPhone}?text=${message}`;
   };
 
-  if (notFound) {
+  if (notFound || (user && user.subscriptionStatus === 'expirado')) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-        <AlertCircle size={64} className="text-gray-300 mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Página não encontrada</h1>
-        <p className="text-gray-500 mb-6 max-w-sm">O perfil @{username} ainda não foi criado ou está desativado.</p>
-        <Link to="/register" className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all">
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${user?.subscriptionStatus === 'expirado' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-400'}`}>
+          <AlertCircle size={40} />
+        </div>
+        <h1 className="text-2xl font-black text-gray-900 mb-2">
+          {user?.subscriptionStatus === 'expirado' ? 'Link Expirado' : 'Página não encontrada'}
+        </h1>
+        <p className="text-gray-500 font-medium mb-8 max-w-sm">
+          {user?.subscriptionStatus === 'expirado' 
+            ? 'Esta página está temporariamente desativada. Entre em contato com o proprietário para reativação.'
+            : `O perfil @${username} ainda não foi criado ou está desativado.`}
+        </p>
+        <Link to="/register" className="bg-gray-900 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all">
           Criar minha página grátis
         </Link>
       </div>

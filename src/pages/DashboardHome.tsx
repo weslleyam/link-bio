@@ -1,17 +1,48 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { User } from '@/types';
 import { db } from '@/services/db';
-import { ArrowUpRight, MousePointer2, Users, Link as LinkIcon } from 'lucide-react';
+import { ArrowUpRight, MousePointer2, Users, Link as LinkIcon, CreditCard, Check } from 'lucide-react';
 
 interface Props {
   user: User;
 }
 
 const DashboardHome: React.FC<Props> = ({ user }) => {
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+
   const page = db.getPageByUsername(user.username);
   const links = page ? db.getLinks(page.id) : [];
   const totalClicks = links.reduce((acc, curr) => acc + curr.clicks, 0);
+
+  const calculateRemainingDays = () => {
+    if (!user?.trialExpiresAt) return 0;
+    const expires = new Date(user.trialExpiresAt);
+    const now = new Date();
+    const diff = expires.getTime() - now.getTime();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  };
+
+  const handleRequestSubscription = async () => {
+    if (!user) return;
+    setIsRequesting(true);
+    try {
+      await db.requestSubscription(user);
+      setRequestSent(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsRequesting(false);
+    }
+  };
+
+  const remainingDays = calculateRemainingDays();
+  const statusLabels = {
+    trial: 'Período de Teste',
+    ativo: 'Plano Ativo',
+    expirado: 'Plano Expirado'
+  };
 
   const stats = [
     { label: 'Total Clicks', value: totalClicks, icon: <MousePointer2 className="text-blue-600" />, trend: '+12%' },
@@ -21,10 +52,78 @@ const DashboardHome: React.FC<Props> = ({ user }) => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user.name}!</h1>
-        <p className="text-gray-500 mt-1">Here's what's happening with your BioLink page.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user.name}!</h1>
+          <p className="text-gray-500 mt-1">Here's what's happening with your BioLink page.</p>
+        </div>
+
+        {/* Subscription Status Badge */}
+        <div className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            user?.subscriptionStatus === 'expirado' ? 'bg-red-50 text-red-600' : 'bg-indigo-50 text-indigo-600'
+          }`}>
+            <CreditCard size={20} />
+          </div>
+          <div className="pr-2">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Assinatura</p>
+            <p className="font-bold text-gray-900 text-sm">{statusLabels[user?.subscriptionStatus || 'trial']}</p>
+          </div>
+          {user?.subscriptionStatus === 'trial' && (
+            <div className="bg-amber-50 text-amber-700 px-3 py-1 rounded-lg border border-amber-100">
+              <p className="text-[10px] font-black uppercase tracking-tighter">{remainingDays} dias</p>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Subscription Call to Action */}
+      {user?.subscriptionStatus !== 'ativo' && (
+        <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+            <CreditCard size={120} />
+          </div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <h2 className="text-2xl font-black mb-2">
+                {user?.subscriptionStatus === 'expirado' 
+                  ? 'Sua assinatura expirou!' 
+                  : 'Gostando do BioLink?'}
+              </h2>
+              <p className="text-indigo-100 font-medium max-w-md">
+                {user?.subscriptionStatus === 'expirado'
+                  ? 'Sua página pública foi desativada. Renove agora para reativar todos os seus links e recursos.'
+                  : 'Assine o plano Pro para garantir que sua página continue ativa após o período de teste.'}
+              </p>
+            </div>
+            <button 
+              onClick={handleRequestSubscription}
+              disabled={isRequesting || requestSent}
+              className={`px-10 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-2xl ${
+                requestSent 
+                  ? 'bg-green-500 text-white cursor-default'
+                  : 'bg-white text-indigo-600 hover:bg-indigo-50 active:scale-95'
+              }`}
+            >
+              {isRequesting ? 'Enviando...' : requestSent ? 'Solicitado!' : 'Assinar Plano'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {requestSent && (
+        <div className="bg-green-50 border-2 border-green-100 p-6 rounded-[2rem] flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0">
+            <Check size={20} />
+          </div>
+          <div>
+            <h4 className="font-black text-green-900 mb-1">Recebemos sua solicitação!</h4>
+            <p className="text-green-700 text-sm font-medium">
+              Um administrador entrará em contato com você em breve para finalizar sua assinatura.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat) => (
