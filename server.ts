@@ -2,32 +2,12 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.hostinger.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: "atendimento@cembrasites.com.br",
-    pass: "uE$lley@55524"
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
-
-// Verificação de conexão SMTP
-transporter.verify(function (error, success) {
-  if (error) {
-    console.error("Erro SMTP:", error);
-  } else {
-    console.log("Servidor SMTP pronto para envio");
-  }
-});
+const resend = new Resend("re_DRbjaM5f_7v3Vsj9Bj2xJU8KfJmNEQowf");
 
 async function startServer() {
   const app = express();
@@ -38,9 +18,9 @@ async function startServer() {
   // Rota de teste de email
   app.get("/test-email", async (req, res) => {
     try {
-      await transporter.sendMail({
-        from: '"Cembra SaaS" <atendimento@cembrasites.com.br>',
-        to: "weslleyam@gmail.com",
+      await resend.emails.send({
+        from: "Cembra SaaS <onboarding@resend.dev>",
+        to: ["weslleyam@gmail.com"],
         subject: "Email de Teste - Cembra SaaS",
         text: `Este é um email de teste enviado em ${new Date().toLocaleString()}`
       });
@@ -62,9 +42,9 @@ async function startServer() {
     const date = new Date().toLocaleString('pt-BR');
 
     try {
-      await transporter.sendMail({
-        from: '"Cembra SaaS" <atendimento@cembrasites.com.br>',
-        to: "weslleyam@gmail.com",
+      await resend.emails.send({
+        from: "Cembra SaaS <onboarding@resend.dev>",
+        to: ["weslleyam@gmail.com"],
         subject: "Nova solicitação de assinatura",
         text: `
 Nome: ${name}
